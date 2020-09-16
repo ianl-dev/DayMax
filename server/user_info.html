@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {
+    align-items: center;
+    background-color: #9AA2B4;
+    display: flex;
+    flex-flow: column;
+    font-family: "Trebuchet MS", Helvetica, sans-serif; 
+  }
+  .top-menu {
+    background-color: #AD1023;
+    float: right;
+    margin: 0px;
+    padding: 4px;
+    position: relative;
+    width: 100%;
+  }
+  .daymax-logo {
+    color: white;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    margin: 4px;
+  }
+  .top-line {
+    background-color: #524177;
+    height: 12px;
+    width: 100%;
+  }
+  .invisible-text {
+    visibility: hidden;
+  }
+  .card-group {
+    align-items: center;
+    display: flex;
+    flex-flow: column;
+  }
+  .card {
+    align-items: center;
+    background-color: #D8E0E6;
+    border: solid #524177 8px;
+    border-radius: 12px;
+    border-width: 8px;
+    display: flex;
+    flex-flow: column;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    margin: 32px;
+    width: 800px;
+  }
+  .input-group {
+    align-items: center;
+    display: flex;
+    flex-flow: column;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .radio-input {
+    display: flex;
+    flex-flow: row;
+  }
+  .submit-button {
+    background-color: #EC724A;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: block;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    height: 40px;
+    margin: 0 auto;
+    padding: 10px 10px;
+    width: 600px;
+  }
+</style>
+
+<script>
+function validatePassword() {
+  var x = document.forms["form"]["password1"].value;
+  var y = document.forms["form"]["password2"].value;
+  if (x != y) {
+    alert("Passwords do not match.");
+    return false;
+  }
+  if (x == "") {
+    alert("Please select a password.");
+    return false;
+  }
+  return true;
+}
+
+function validateUser() {
+  var gender = document.forms["form"]["gender"].value;
+  var gender_other = document.forms["form"]["gender_other"].value;
+  if (gender=="other" && gender_other=="") {
+    alert("Please provide more information on gender.");
+    return false;
+  }
+  if (gender_other!="" && gender!="other") {
+    alert("Please confirm gender selection since more information was provided.");
+    return false;
+  }
+  return true;
+}
+
+async function validateEmail(type) {
+  //const access_key = '17cf32009d7d62b74113a800dfe7a934';
+  if(type==''){
+    var email = document.forms['form']['email'].value;
+  }else{
+    var email = document.forms['form']['prov_email'].value;
+  }
+  var bool = await getEmailAsync(email)
+  .then(data => {
+    if(data==null){
+      console.log('not working');
+      return false;
+    }
+    else{
+      console.log(data)
+      if (data.success==null){
+        if (data.format_valid==false){
+          alert("Please check the format of your "+type+"email address.");
+          return false;
+        }else if (data.smtp_check==false){
+          if(data.did_you_mean!=""){
+            alert("Did you mean to insert this "+type+"email: " + data.did_you_mean);
+            return false;
+          }else{
+            alert("Please enter a valid "+type+"email address.");
+            return false;
+          }
+        }else{
+          return true;
+          console.log('after true statment');
+        }
+      }else if (!data.success){
+        alert("Unable to verify "+type+"email address. Please check console for error message");
+        console.log(data.error)
+        return false;
+      }
+    }
+  });
+  return bool;
+}
+
+async function getEmailAsync(email) {
+  try{
+    let response = await fetch(`http://apilayer.net/api/check?access_key=534186fe475150269c4daed720a08f48&email=${email}`);
+    return await response.json();
+  }catch(err){
+    console.error(err);
+  }
+} 
+
+async function validate(type1, type2, form){
+  var result_password = validatePassword();
+  var result_user = validateUser();
+  var result_email = await validateEmail(type1);
+  var result_prov_email = await validateEmail(type2);
+  console.log("password: " + result_password);
+  console.log("user_gender: " + result_user);
+  console.log("email: " + result_email);
+  console.log("prov_email: " + result_prov_email);
+  if (result_password && result_user && result_email && result_prov_email){
+    console.log('here, submitting...');
+    form.submit();
+  }
+}
+
+</script>
+
+</head>
+
+<body>
+  <div class="top-menu">
+    <h1 class="daymax-logo"> DayMax </h1>
+  </div>
+  <div class="top-line">
+    <div class="invisible-text"> test </div>
+  </div>
+  <div class="card-group">
+    <h1> Register to DayMax </h1>
+    <form name="form" action="/sandbox/sc/team103/dayMax/initial.py" method="post" onsubmit="validate('','provider ',this); return false;">
+      <div class="card">  
+        <h2>Personal Information</h2>
+        <div class="input-group">
+          <label for="fname">First Name:</label>
+          <input type="text" id="fname" name="fname" value="" required>
+        </div>
+        <div class="input-group">
+          <label for="lname">Last Name:</label>
+          <input type="text" id="lname" name="lname" value="" required>
+        </div>
+        <div class="input-group">
+          <label for="birthdate">Birth Date:</label>
+          <input type="date" id="birthdate" name="birthdate" required>
+        </div>
+        <div class="input-group">
+          <p> Gender: </p>
+          <div class="radio-input">
+            <input type="radio" id="male" name="gender" value="male" required>
+            <label for="male">Male</label>
+          </div>
+          <div class="radio-input">
+            <input type="radio" id="female" name="gender" value="female">
+            <label for="female">Female</label>
+          </div>
+          <div class="radio-input">
+            <input type="radio" id="other" name="gender" value="other">
+            <label for="other">Other</label>
+          </div>
+          <label for="gender_other">If other, please specify:</label>
+          <input type="text" id="gender_other" name="gender_other" value="">
+        </div>
+        <div class="input-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+      </div>
+    <div class="card">
+      <h2>Provider Information</h2>
+      <div class="input-group">
+        <label for="prov_fname">First Name:</label>
+        <input type="text" id="prov_fname" name="prov_fname" value="" required>
+      </div>
+      <div class="input-group">
+        <label for="prov_lname">Last Name:</label>
+        <input type="text" id="prov_lname" name="prov_lname" value="" required>
+      </div>
+      <div class="input-group">
+        <label for="prov_email">Email:</label>
+        <input type="email" id="prov_email" name="prov_email" required>
+      </div> 
+        <input type="hidden" id="info" name="info" value="user">
+    </div>
+    <div class="card">
+      <h2>Set a Password</h2>
+      <div class="input-group">
+        <label for="password1">Choose a password:</label>
+        <input type="password" id="password1" name="password1" value="" required>
+      </div>
+      <div class="input-group">
+        <label for="password2">Retype password:</label>
+        <input type="password" id="password2" name="password2" value="" required>
+      </div>
+    </div>
+    <input class="submit-button" type="submit" value="Register to DayMax">
+    </form>
+  </div>
+  <p id="demo"></p>
+
+</body>
+</html>
+
